@@ -1,73 +1,52 @@
-# React + TypeScript + Vite
+### Explain choice I made
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+why next and not react
+why use server pages
 
-Currently, two official plugins are available:
+what I could have done better?
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Caching?? Using react query
+- Unit tests
+- 
 
-## React Compiler
+Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Authentication & Authorization:**
 
-## Expanding the ESLint configuration
+- JWT-based authentication with secure session management
+- Four user roles: Applicant, Reviewer, Approver, and Admin with distinct permission boundaries
+- Backend role enforcement on all API endpoints (returns 403 for unauthorized requests)
+- **Maker-checker enforcement**: The reviewer of an application cannot be the same person who makes the final approval decision
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+**Workflow & State Machine:**
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Applications flow through: Draft -> Submitted -> Under Review -> (Additional Info Required) -> Reviewed -> Approved/Rejected
+- Invalid state transitions are rejected at the API level with optimistic locking for concurrent access handling
+- Final decisions (approved/rejected) are permanent
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**Audit Trail:**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Every action is recorded in an append-only audit log
+- Each entry captures: user, action, timestamp, and state before/after
+- The audit log cannot be modified or deleted, designed for legal evidence
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+
+**Document Handling:**
+
+- File uploads with 5MB limit enforced server-side
+- Document versioning (previous versions remain accessible)
+- Metadata stored in database with simulated storage paths
+
+
+**Pages Built:**
+
+- Login page with demo credentials
+- Dashboard with role-specific guidance
+- Applications list with search and filtering
+- New application form
+- Application detail with workflow actions
+- Users management (admin only)
+- Audit log viewer (admin/approver)
+- Profile page showing permissions

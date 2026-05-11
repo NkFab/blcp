@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fab
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: blcp
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fab -d blcp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./blcp-api
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3001
+      POSTGRES_USER: fab
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: blcp
+      DATABASE_CONNECTION_STRING: postgresql://fab:password123@postgres:5432/blcp
+      USER_PASSWORD: password123
+      JWT_ACCESS_SECRET: your_access_secret_key
+      JWT_REFRESH_SECRET: your_refresh_secret_key
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./blcp-api:/app
+      - backend_node_modules:/app/node_modules
+    command: sh -c "pnpm install && pnpm setup && pnpm dev"
+
+  frontend:
+    build:
+      context: ./blcp-frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    environment:
+      BACKEND_URL: http://backend:3001/api/v1
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./blcp-frontend:/app
+      - frontend_node_modules:/app/node_modules
+    command: sh -c "pnpm install && pnpm next dev --hostname 0.0.0.0 --port 3000"
+
+volumes:
+  postgres_data:
+  backend_node_modules:
+  frontend_node_modules:
