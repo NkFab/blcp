@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import app from "./app";
 import { AppDataSource } from "./database";
+import "./events"; // Ensure events are registered
 
 (async () => {
   try {

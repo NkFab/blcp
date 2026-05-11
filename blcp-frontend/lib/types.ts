@@ -6,6 +6,7 @@ export type ApplicationStatus =
   | 'draft'
   | 'submitted'
   | 'under_review'
+  | 'reviewed'
   | 'approved'
   | 'rejected';
 
@@ -13,28 +14,26 @@ export type ApplicationStatus =
 export const VALID_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
   draft: ['submitted'],
   submitted: ['under_review'],
-  under_review: ['approved', 'rejected'],
+  under_review: ['reviewed'],
+  reviewed: ['approved', 'rejected'],
   approved: [], // Terminal state
   rejected: [], // Terminal state
 };
 
-// Action types for audit log
-export type AuditAction = 
-  | 'application_created'
-  | 'application_submitted'
-  | 'application_assigned'
-  | 'review_started'
-  | 'additional_info_requested'
-  | 'additional_info_submitted'
-  | 'review_completed'
-  | 'application_approved'
-  | 'application_rejected'
-  | 'document_uploaded'
-  | 'document_version_added'
-  | 'user_created'
-  | 'user_updated'
-  | 'user_login'
-  | 'user_logout';
+export type ReviewRecommendation =
+  | 'recommended_approval'
+  | 'recommended_rejection'
+  | 'request_more_info';
+
+export type AuditAction =
+  | 'CREATE_APPLICATION'
+  | 'UPDATE_APPLICATION'
+  | 'SUBMIT_APPLICATION'
+  | 'REVIEW_APPLICATION'
+  | 'APPROVE_APPLICATION'
+  | 'REJECT_APPLICATION'
+  | 'EDIT_APPLICATION'
+  | 'UPLOAD_DOCUMENT';
 
 // User interface
 export interface User {
@@ -68,17 +67,24 @@ export interface Application {
   licenceType: 'commercial_licence' | 'development_bank_licence' | 'microfinance_bank_licence';
   isForeignApplicant: boolean;
   isExistingInstitution: boolean;
+  reviewComment: string | null;
+  approvalComment: string | null;
+  reviewRecommendation: ReviewRecommendation | null;
+  version: number;
   applicantId: string;
   status: ApplicationStatus;
-  reviewedById: string | null;
+  reviewerId: string | null;
+  approverId: string | null;
   createdAt: string;
   updatedAt: string;
   submittedAt: string | null;
   reviewedAt: string | null;
-  reviewCompletedAt: string | null;
+  approvedAt: string | null;
   applicant?: BackendUser | null;
-  reviewedBy?: BackendUser | null;
+  reviewer?: BackendUser | null;
+  approver?: BackendUser | null;
   documents?: BackendDocument[];
+  audits?: Audit[];
 }
 
 export interface BackendUser {
@@ -108,6 +114,20 @@ export interface Document extends BackendDocument {}
 
 export interface AuditLogEntry {
   id: string;
+  userId: string;
+  applicationId: string;
+  action: AuditAction;
+  snapshot: {
+    before: Partial<Application> | null;
+    after: Partial<Application> | null;
+  };
+  createdAt: string;
+  updatedAt: string;
+  user?: BackendUser | null;
+}
+
+export interface LegacyAuditLogEntry {
+  id: string;
   timestamp: string;
   userId: string;
   userEmail: string;
@@ -122,6 +142,8 @@ export interface AuditLogEntry {
   ipAddress: string | null;
   userAgent: string | null;
 }
+
+export interface Audit extends AuditLogEntry {}
 
 export interface RolePermissions {
   canCreateApplication: boolean;
@@ -170,7 +192,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canViewOwnApplications: false,
     canViewAllApplications: true,
     canReviewApplications: false,
-    canApproveApplications: false,
+    canApproveApplications: true,
     canManageUsers: true,
     canViewAuditLog: false,
     canUploadDocuments: false,
@@ -181,7 +203,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canViewAllApplications: true,
     canReviewApplications: false,
     canApproveApplications: false,
-    canManageUsers: true,
+    canManageUsers: false,
     canViewAuditLog: false,
     canUploadDocuments: false,
   },

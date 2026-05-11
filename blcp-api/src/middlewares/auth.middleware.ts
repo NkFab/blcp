@@ -44,7 +44,9 @@ const recordBelongsToCurrentUser = (
   req: Request,
   userIdKey: string,
 ): boolean => {
-  const userIds = [req.params[userIdKey], req.body[userIdKey]].filter(Boolean);
+  const userIds = [req.params?.[userIdKey], req.body?.[userIdKey]].filter(
+    Boolean,
+  );
   return userIds.includes(req.user?.id);
 };
 

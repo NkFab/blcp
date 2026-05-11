@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { QueryFailedError } from "typeorm";
+import { OptimisticLockVersionMismatchError, QueryFailedError } from "typeorm";
 import { ZodError, flattenError } from "zod";
 
 interface HttpErrorType {
@@ -63,6 +63,14 @@ export const asyncRouterHandler = (
         return res.status(409).json({
           message: "Conflict Error: Duplicate entry",
           details: (error as unknown as Record<string, unknown>).detail,
+        });
+      }
+
+      // handle concurrent update conflicts
+      if (error instanceof OptimisticLockVersionMismatchError) {
+        return res.status(409).json({
+          message:
+            "Conflict Error: Record has been modified by another process. Please refresh and try again.",
         });
       }
 

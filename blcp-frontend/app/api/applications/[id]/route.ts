@@ -8,24 +8,10 @@ export async function GET(
   try {
     const { id } = await params;
     const response = await fetchBackend({
-      path: '/applications',
+      path: `/applications/${id}`,
       method: 'GET',
     });
-
-    const payload = await response.json();
-    if (!response.ok) {
-      return NextResponse.json(payload, { status: response.status });
-    }
-
-    const application = payload.data?.find((item: { id: string }) => item.id === id);
-    if (!application) {
-      return NextResponse.json({ error: 'Application not found' }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      application,
-      documents: application.documents || [],
-    });
+    return backendJsonResponse(response);
   } catch (error) {
     console.error('Get application error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

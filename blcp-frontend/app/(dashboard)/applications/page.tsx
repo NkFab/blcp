@@ -20,6 +20,7 @@ const STATUS_OPTIONS: { value: ApplicationStatus | 'all'; label: string }[] = [
   { value: 'draft', label: 'Draft' },
   { value: 'submitted', label: 'Submitted' },
   { value: 'under_review', label: 'Under Review' },
+  { value: 'reviewed', label: 'Reviewed' },
   { value: 'approved', label: 'Approved' },
   { value: 'rejected', label: 'Rejected' },
 ];
@@ -60,10 +61,11 @@ export default function ApplicationsPage() {
           : status === 'draft'
             ? 'outline'
             : 'secondary';
-    return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>;
+    return <Badge variant={variant}>{status.replaceAll('_', ' ')}</Badge>;
   }
 
   const filteredApplications = applications.filter((application) => {
+    if (statusFilter !== 'all' && application.status !== statusFilter) return false;
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const applicantName =

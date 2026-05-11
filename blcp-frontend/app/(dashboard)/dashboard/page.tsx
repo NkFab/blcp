@@ -16,6 +16,7 @@ interface DashboardStats {
   draft: number;
   submitted: number;
   underReview: number;
+  reviewed: number;
   approved: number;
   rejected: number;
 }
@@ -38,6 +39,7 @@ export default function DashboardPage() {
           draft: apps.filter((app: Application) => app.status === 'draft').length,
           submitted: apps.filter((app: Application) => app.status === 'submitted').length,
           underReview: apps.filter((app: Application) => app.status === 'under_review').length,
+          reviewed: apps.filter((app: Application) => app.status === 'reviewed').length,
           approved: apps.filter((app: Application) => app.status === 'approved').length,
           rejected: apps.filter((app: Application) => app.status === 'rejected').length,
         });
@@ -56,6 +58,7 @@ export default function DashboardPage() {
       draft: 'Draft',
       submitted: 'Submitted',
       under_review: 'Under Review',
+      reviewed: 'Reviewed',
       approved: 'Approved',
       rejected: 'Rejected',
     };
@@ -114,7 +117,7 @@ export default function DashboardPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                <CardTitle className="text-sm font-medium">In Progress</CardTitle>
                 <ClockIcon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="text-2xl font-bold">
@@ -123,17 +126,17 @@ export default function DashboardPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-medium">Approved</CardTitle>
+                <CardTitle className="text-sm font-medium">Awaiting Approval</CardTitle>
                 <CheckCircleIcon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="text-2xl font-bold">{stats?.approved ?? 0}</CardContent>
+              <CardContent className="text-2xl font-bold">{stats?.reviewed ?? 0}</CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+                <CardTitle className="text-sm font-medium">Completed</CardTitle>
                 <XCircleIcon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="text-2xl font-bold">{stats?.rejected ?? 0}</CardContent>
+              <CardContent className="text-2xl font-bold">{(stats?.approved ?? 0) + (stats?.rejected ?? 0)}</CardContent>
             </Card>
           </>
         )}

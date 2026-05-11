@@ -1,12 +1,17 @@
 import { EntityTarget, ObjectLiteral } from "typeorm";
-import { MainModel } from "../../database/main.model";
+import { MainModalCallbacks, MainModel } from "../../database/main.model";
 import HttpError, { asyncRouterHandler } from "../../helpers/express.helper";
 import { ZodObject, ZodRawShape } from "zod";
 
 export class MainController<T extends ObjectLiteral> extends MainModel<T> {
   schema: ZodObject<ZodRawShape> | undefined;
-  constructor(repository: EntityTarget<T>, schema?: ZodObject<ZodRawShape>) {
-    super(repository);
+
+  constructor(
+    repository: EntityTarget<T>,
+    schema?: ZodObject<ZodRawShape>,
+    callbacks?: MainModalCallbacks<T>,
+  ) {
+    super(repository, callbacks);
     this.schema = schema;
   }
 

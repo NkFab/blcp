@@ -8,41 +8,55 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
+    switch (body.action) {
+      case 'submit': {
+        const response = await fetchBackend({
+          path: `/applications/${id}`,
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'submitted',
+            version: body.version,
+          }),
+        });
 
-    if (body.action !== 'submit') {
-      return NextResponse.json(
-        { success: false, error: 'This backend currently supports direct editing and submission only.' },
-        { status: 501 }
-      );
+        return backendJsonResponse(response);
+      }
+      case 'review': {
+        const response = await fetchBackend({
+          path: `/applications/${id}/review`,
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reviewComment: body.reviewComment,
+            reviewRecommendation: body.reviewRecommendation,
+            version: body.version,
+          }),
+        });
+
+        return backendJsonResponse(response);
+      }
+      case 'approve':
+      case 'reject': {
+        const response = await fetchBackend({
+          path: `/applications/${id}/approve`,
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            approvalComment: body.approvalComment,
+            status: body.action === 'approve' ? 'approved' : 'rejected',
+            version: body.version,
+          }),
+        });
+
+        return backendJsonResponse(response);
+      }
+      default:
+        return NextResponse.json(
+          { success: false, error: 'Unsupported action' },
+          { status: 400 }
+        );
     }
-
-    const response = await fetchBackend({
-      path: '/applications',
-      method: 'GET',
-    });
-    const payload = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json(payload, { status: response.status });
-    }
-
-    const application = payload.data?.find((item: { id: string }) => item.id === id);
-    if (!application) {
-      return NextResponse.json({ success: false, error: 'Application not found' }, { status: 404 });
-    }
-
-    const updateResponse = await fetchBackend({
-      path: `/applications/${id}`,
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...application,
-        applicantId: application.applicantId,
-        status: 'submitted',
-      }),
-    });
-
-    return backendJsonResponse(updateResponse);
   } catch (error) {
     console.error('Application action error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
