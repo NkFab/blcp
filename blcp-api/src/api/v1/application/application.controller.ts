@@ -59,7 +59,7 @@ class ApplicationController extends MainController<Application> {
 
     if (req.user.role === UserRole.APPLICANT) {
       queryParams.where = { applicantId: req.user.id };
-    }
+    } 
 
     return res.json(await this.findAll(queryParams));
   });
