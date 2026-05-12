@@ -13,11 +13,24 @@ router.post(
   applicationController.prepareApplicationDetails,
   applicationController.handleCreate,
 );
+
 router.put(
   "/:id",
   authorize({ roles: [UserRole.APPLICANT, "self"], userIdKey: "applicantId" }),
   applicationController.prepareApplicationDetails,
   applicationController.handleUpdate,
+);
+
+router.put(
+  "/:id/review",
+  authorize({ roles: [UserRole.REVIEWER] }),
+  applicationController.handleApplicationReview,
+);
+
+router.put(
+  "/:id/approve",
+  authorize({ roles: [UserRole.SUPERVISOR, UserRole.APPROVER] }),
+  applicationController.handleApplicationApproval,
 );
 
 export default router;

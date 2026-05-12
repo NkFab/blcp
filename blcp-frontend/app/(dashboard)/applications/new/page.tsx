@@ -117,7 +117,6 @@ export default function NewApplicationPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">New Application</h1>
-          <p className="text-muted-foreground">This form now matches the backend create-application contract.</p>
         </div>
       </div>
 
@@ -131,7 +130,6 @@ export default function NewApplicationPage() {
       <Card>
         <CardHeader>
           <CardTitle>Application Details</CardTitle>
-          <CardDescription>Fill in the fields the backend currently accepts.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -207,7 +205,6 @@ export default function NewApplicationPage() {
               />
               <div>
                 <p className="font-medium">Foreign Applicant</p>
-                <p className="text-sm text-muted-foreground">Marks the application as a foreign applicant case.</p>
               </div>
             </label>
             <label className="flex items-center gap-3 rounded-lg border p-4">
@@ -217,7 +214,6 @@ export default function NewApplicationPage() {
               />
               <div>
                 <p className="font-medium">Existing Institution</p>
-                <p className="text-sm text-muted-foreground">Marks the applicant as an existing institution.</p>
               </div>
             </label>
           </div>

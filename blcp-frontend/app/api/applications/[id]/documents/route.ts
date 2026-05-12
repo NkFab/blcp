@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { id } = await params;
     const response = await fetchBackend({
-      path: '/applications',
+      path: `/applications/${id}`,
       method: 'GET',
     });
     const payload = await response.json();
@@ -17,11 +17,9 @@ export async function GET(
       return NextResponse.json(payload, { status: response.status });
     }
 
-    const application = payload.data?.find((item: { id: string }) => item.id === id);
-
     return NextResponse.json({
       success: true,
-      documents: application?.documents || [],
+      documents: payload.documents ?? [],
     });
   } catch (error) {
     console.error('Get documents error:', error);

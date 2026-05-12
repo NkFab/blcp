@@ -5,4 +5,4 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-pnpm typeorm migration:create "src/database/migration/$1"
+yarn typeorm migration:create "src/database/migration/$1"

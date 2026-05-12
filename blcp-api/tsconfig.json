@@ -29,7 +29,10 @@
     "node_modules",
     "dist",
     "**/*.spec.ts",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "**/tests/**",
+    "src/__tests__/**",
+    "src/database/seeders/*"
   ],
   "files": ["./types/express.d.ts"]
 }

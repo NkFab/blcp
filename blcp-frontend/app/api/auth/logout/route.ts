@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { clearAuthCookies } from '@/lib/backend';
+import { clearAuthCookies } from '@/lib/backend-server';
 import { fetchBackend } from '@/lib/backend-proxy';
 
 export async function POST() {

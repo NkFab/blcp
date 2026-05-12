@@ -9,69 +9,91 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
-import { ArrowLeftIcon, FileTextIcon, WarningCircleIcon, PaperPlaneTiltIcon } from '@phosphor-icons/react';
-import type { Application, Document } from '@/lib/types';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeftIcon, FileTextIcon, WarningCircleIcon, PaperPlaneTiltIcon, CheckCircleIcon, XCircleIcon } from '@phosphor-icons/react';
+import type { Application, Audit, Document, ReviewRecommendation } from '@/lib/types';
 import { format } from 'date-fns';
+
+const REVIEW_RECOMMENDATIONS: { value: ReviewRecommendation; label: string }[] = [
+  { value: 'recommended_approval', label: 'Recommend Approval' },
+  { value: 'recommended_rejection', label: 'Recommend Rejection' },
+  { value: 'request_more_info', label: 'Request More Info' },
+];
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { user } = useAuth();
+  const { user, permissions } = useAuth();
   const [application, setApplication] = useState<Application | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [audits, setAudits] = useState<Audit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState('');
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewRecommendation, setReviewRecommendation] = useState<ReviewRecommendation | ''>('');
+  const [approvalComment, setApprovalComment] = useState('');
+
+  async function fetchApplication() {
+    try {
+      const response = await fetch(`/api/applications/${id}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || data.message || 'Failed to load application');
+        return;
+      }
+
+      setApplication(data.id ? data : data.application);
+      setDocuments((data.documents || data.application?.documents || []) as Document[]);
+      setAudits((data.audits || data.application?.audits || []) as Audit[]);
+      setError('');
+    } catch {
+      setError('Network error');
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function fetchApplication() {
-      try {
-        const response = await fetch(`/api/applications/${id}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-          setError(data.error || 'Failed to load application');
-          return;
-        }
-
-        setApplication(data.application);
-        setDocuments(data.documents || []);
-      } catch {
-        setError('Network error');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchApplication();
+    void fetchApplication();
   }, [id]);
 
-  async function submitDraft() {
+  async function performAction(
+    action: 'submit' | 'review' | 'approve' | 'reject',
+    body: Record<string, unknown> = {}
+  ) {
     if (!application) return;
 
-    setIsSubmitting(true);
+    setIsActionLoading(true);
     setError('');
 
     try {
       const response = await fetch(`/api/applications/${application.id}/actions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'submit' }),
+        body: JSON.stringify({
+          action,
+          version: application.version,
+          ...body,
+        }),
       });
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Failed to submit application');
+        setError(data.error || data.message || 'Action failed');
         return;
       }
 
-      const refreshed = await fetch(`/api/applications/${application.id}`);
-      const refreshedData = await refreshed.json();
-      setApplication(refreshedData.application);
-      setDocuments(refreshedData.documents || []);
+      setReviewComment('');
+      setReviewRecommendation('');
+      setApprovalComment('');
+      await fetchApplication();
     } catch {
       setError('Network error');
     } finally {
-      setIsSubmitting(false);
+      setIsActionLoading(false);
     }
   }
 
@@ -85,7 +107,19 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             ? 'outline'
             : 'secondary';
 
-    return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>;
+    return <Badge variant={variant}>{status.replaceAll('_', ' ')}</Badge>;
+  }
+
+  function getRecommendationBadge(value: ReviewRecommendation | null) {
+    if (!value) return null;
+    const label =
+      value === 'recommended_approval'
+        ? 'Recommend Approval'
+        : value === 'recommended_rejection'
+          ? 'Recommend Rejection'
+          : 'Request More Info';
+    const variant = value === 'recommended_rejection' ? 'destructive' : 'secondary';
+    return <Badge variant={variant}>{label}</Badge>;
   }
 
   const canSubmitDraft =
@@ -93,6 +127,16 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
     application.status === 'draft' &&
     user?.role === 'applicant' &&
     application.applicantId === user.id;
+
+  const canReview =
+    !!application &&
+    application.status === 'submitted' &&
+    permissions?.canReviewApplications;
+
+  const canApprove =
+    !!application &&
+    application.status === 'reviewed' &&
+    permissions?.canApproveApplications;
 
   if (isLoading) {
     return (
@@ -103,15 +147,17 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
     );
   }
 
-  if (error || !application) {
+  if (error && !application) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <WarningCircleIcon className="mb-4 h-12 w-12 text-destructive" />
         <h1 className="text-xl font-bold">Unable to load application</h1>
-        <p className="mt-2 text-muted-foreground">{error || 'Application not found'}</p>
+        <p className="mt-2 text-muted-foreground">{error}</p>
       </div>
     );
   }
+
+  if (!application) return null;
 
   return (
     <div className="space-y-6">
@@ -133,8 +179,8 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         </div>
 
         {canSubmitDraft && (
-          <Button onClick={submitDraft} disabled={isSubmitting} className="gap-2">
-            {isSubmitting ? <Spinner className="h-4 w-4" /> : <PaperPlaneTiltIcon size={16} />}
+          <Button onClick={() => performAction('submit')} disabled={isActionLoading} className="gap-2">
+            {isActionLoading ? <Spinner className="h-4 w-4" /> : <PaperPlaneTiltIcon size={16} />}
             Submit Draft
           </Button>
         )}
@@ -156,11 +202,11 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-sm text-muted-foreground">Institution Type</p>
-                <p className="font-medium capitalize">{application.institutionType.replace(/_/g, ' ')}</p>
+                <p className="font-medium capitalize">{application.institutionType.replaceAll('_', ' ')}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Licence Type</p>
-                <p className="font-medium capitalize">{application.licenceType.replace(/_/g, ' ')}</p>
+                <p className="font-medium capitalize">{application.licenceType.replaceAll('_', ' ')}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Capital Amount</p>
@@ -173,13 +219,142 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
                   {application.isExistingInstitution ? 'Existing Institution' : 'New Institution'}
                 </p>
               </div>
+              {application.applicant && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Applicant</p>
+                  <p className="font-medium">
+                    {application.applicant.firstName} {application.applicant.lastName}
+                  </p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-muted-foreground">Current Version</p>
+                <p className="font-medium">{application.version}</p>
+              </div>
             </CardContent>
           </Card>
+
+          {application.reviewComment || application.reviewRecommendation || application.approvalComment ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Workflow Notes</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {application.reviewRecommendation && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Review Recommendation</p>
+                    {getRecommendationBadge(application.reviewRecommendation)}
+                  </div>
+                )}
+                {application.reviewComment && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Review Comment</p>
+                    <p className="whitespace-pre-wrap text-sm">{application.reviewComment}</p>
+                  </div>
+                )}
+                {application.approvalComment && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Approval Comment</p>
+                    <p className="whitespace-pre-wrap text-sm">{application.approvalComment}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {canReview && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Review Application</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Recommendation</Label>
+                  <Select
+                    value={reviewRecommendation}
+                    onValueChange={(value) => setReviewRecommendation(value as ReviewRecommendation)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a recommendation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {REVIEW_RECOMMENDATIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reviewComment">Review Comment</Label>
+                  <Textarea
+                    id="reviewComment"
+                    value={reviewComment}
+                    onChange={(event) => setReviewComment(event.target.value)}
+                    rows={4}
+                    placeholder="Summarize your review findings"
+                  />
+                </div>
+                <Button
+                  onClick={() =>
+                    performAction('review', {
+                      reviewComment,
+                      reviewRecommendation,
+                    })
+                  }
+                  disabled={!reviewRecommendation || isActionLoading}
+                  className="gap-2"
+                >
+                  {isActionLoading ? <Spinner className="h-4 w-4" /> : <CheckCircleIcon size={16} />}
+                  Submit Review
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {canApprove && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Approval Decision</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="approvalComment">Approval Comment</Label>
+                  <Textarea
+                    id="approvalComment"
+                    value={approvalComment}
+                    onChange={(event) => setApprovalComment(event.target.value)}
+                    rows={4}
+                    placeholder="Add an approval or rejection note"
+                  />
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    onClick={() => performAction('approve', { approvalComment })}
+                    disabled={isActionLoading}
+                    className="gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    {isActionLoading ? <Spinner className="h-4 w-4" /> : <CheckCircleIcon size={16} />}
+                    Approve
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => performAction('reject', { approvalComment })}
+                    disabled={isActionLoading}
+                    className="gap-2"
+                  >
+                    {isActionLoading ? <Spinner className="h-4 w-4" /> : <XCircleIcon size={16} />}
+                    Reject
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
               <CardTitle>Documents</CardTitle>
-              <CardDescription>Read-only document list returned by the backend relations.</CardDescription>
             </CardHeader>
             <CardContent>
               {documents.length === 0 ? (
@@ -223,14 +398,14 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
               )}
               {application.reviewedAt && (
                 <div>
-                  <p className="text-muted-foreground">Review Started</p>
+                  <p className="text-muted-foreground">Reviewed</p>
                   <p className="font-medium">{format(new Date(application.reviewedAt), 'PPP p')}</p>
                 </div>
               )}
-              {application.reviewCompletedAt && (
+              {application.approvedAt && (
                 <div>
-                  <p className="text-muted-foreground">Review Completed</p>
-                  <p className="font-medium">{format(new Date(application.reviewCompletedAt), 'PPP p')}</p>
+                  <p className="text-muted-foreground">Approved / Rejected</p>
+                  <p className="font-medium">{format(new Date(application.approvedAt), 'PPP p')}</p>
                 </div>
               )}
             </CardContent>
@@ -238,17 +413,33 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
 
           <Card>
             <CardHeader>
-              <CardTitle>Backend Notes</CardTitle>
+              <CardTitle>Audit Trail</CardTitle>
             </CardHeader>
             <CardContent>
-              <Alert>
-                <AlertTitle>Frontend aligned to backend</AlertTitle>
-                <AlertDescription>
-                  Review, approval, audit log, and document upload workflows are no longer simulated in the frontend when the backend does not expose them.
-                </AlertDescription>
-              </Alert>
+              {audits.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No audit records returned for this application yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {audits.map((audit) => (
+                    <div key={audit.id} className="rounded-lg border p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <Badge variant="outline">{audit.action.replaceAll('_', ' ')}</Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(audit.createdAt), 'PP p')}
+                        </span>
+                      </div>
+                      {audit.user && (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {audit.user.firstName} {audit.user.lastName}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
+
         </div>
       </div>
     </div>

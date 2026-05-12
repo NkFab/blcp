@@ -134,6 +134,10 @@ export default function LoginPage() {
                 <span>Supervisor:</span>
                 <span className="font-mono">fabrice.supervisor@test.com</span>
               </div>
+              <div className="flex justify-between rounded bg-muted p-2">
+                <span>Admin:</span>
+                <span className="font-mono">john.admin@test.com</span>
+              </div>
               <p className="text-center mt-2">Password: <span className="font-mono">password123</span></p>
             </div>
           </div>

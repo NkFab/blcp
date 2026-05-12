@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FileText, Plus, MagnifyingGlass, Eye, Funnel } from '@phosphor-icons/react';
+import { backendListPayload } from '@/lib/backend-shared';
 import type { Application, ApplicationStatus } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -20,6 +21,7 @@ const STATUS_OPTIONS: { value: ApplicationStatus | 'all'; label: string }[] = [
   { value: 'draft', label: 'Draft' },
   { value: 'submitted', label: 'Submitted' },
   { value: 'under_review', label: 'Under Review' },
+  { value: 'reviewed', label: 'Reviewed' },
   { value: 'approved', label: 'Approved' },
   { value: 'rejected', label: 'Rejected' },
 ];
@@ -37,10 +39,9 @@ export default function ApplicationsPage() {
   useEffect(() => {
     async function fetchApplications() {
       try {
-        const url = statusFilter !== 'all' ? `/api/applications?status=${statusFilter}` : '/api/applications';
-        const response = await fetch(url);
+        const response = await fetch('/api/applications');
         const data = await response.json();
-        setApplications(data.data || []);
+        setApplications(backendListPayload<Application>(data));
       } catch (error) {
         console.error('Failed to fetch applications:', error);
       } finally {
@@ -60,10 +61,11 @@ export default function ApplicationsPage() {
           : status === 'draft'
             ? 'outline'
             : 'secondary';
-    return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>;
+    return <Badge variant={variant}>{status.replaceAll('_', ' ')}</Badge>;
   }
 
   const filteredApplications = applications.filter((application) => {
+    if (statusFilter !== 'all' && application.status !== statusFilter) return false;
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const applicantName =
@@ -127,7 +129,6 @@ export default function ApplicationsPage() {
       <Card>
         <CardHeader>
           <CardTitle>{filteredApplications.length} Applications</CardTitle>
-          <CardDescription>Open an application to inspect backend-backed details.</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (

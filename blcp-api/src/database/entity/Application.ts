@@ -7,14 +7,23 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  VersionColumn,
 } from "typeorm";
 import { User } from "./User";
 import { ApplicationDocument } from "./ApplicationDocument";
+import { Audit } from "./Audit";
+
+export enum ReviewRecommendation {
+  RECOMMEND_APPROVAL = "recommended_approval",
+  RECOMMEND_REJECTION = "recommended_rejection",
+  REQUEST_MORE_INFO = "request_more_info",
+}
 
 export enum ApplicationStatus {
   DRAFT = "draft",
   SUBMITTED = "submitted",
   UNDER_REVIEW = "under_review",
+  REVIEWED = "reviewed",
   APPROVED = "approved",
   REJECTED = "rejected",
 }
@@ -71,6 +80,19 @@ export class Application {
   @Column({ default: false })
   isExistingInstitution: boolean;
 
+  @Column({ nullable: true })
+  reviewComment: string;
+
+  @Column({ nullable: true })
+  approvalComment: string;
+
+  @Column({ type: "enum", enum: ReviewRecommendation, nullable: true })
+  reviewRecommendation: ReviewRecommendation;
+
+  // handle concurrent updates with locking mechanism
+  @VersionColumn({ default: 1 })
+  version: number;
+
   /**********TIMESTAMPS and association**************/
   @Column({ type: "uuid" })
   applicantId: string;
@@ -80,18 +102,30 @@ export class Application {
   applicant: User;
 
   @Column({ type: "uuid", nullable: true })
-  reviewedById: string;
+  reviewerId: string;
 
   @ManyToOne(() => User, (user) => user.assignedApplications, {
     nullable: true,
   })
-  @JoinColumn({ name: "reviewedById" })
-  reviewedBy: User | null;
+  @JoinColumn({ name: "reviewerId" })
+  reviewer: User | null;
 
   @OneToMany(() => ApplicationDocument, (document) => document.application, {
     cascade: true,
   })
   documents: ApplicationDocument[];
+
+  @Column({ type: "uuid", nullable: true })
+  approverId: string;
+
+  @ManyToOne(() => User, (user) => user.approvedApplications, {
+    nullable: true,
+  })
+  @JoinColumn({ name: "approverId" })
+  approver: User | null;
+
+  @OneToMany(() => Audit, (audit) => audit.application)
+  audits: Audit[];
 
   @CreateDateColumn()
   createdAt: Date;
@@ -106,5 +140,5 @@ export class Application {
   reviewedAt: Date;
 
   @Column({ type: "timestamp", nullable: true })
-  reviewCompletedAt: Date;
+  approvedAt: Date;
 }

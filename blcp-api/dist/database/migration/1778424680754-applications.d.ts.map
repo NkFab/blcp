@@ -1,1 +1,0 @@
-{"version":3,"file":"1778424680754-applications.d.ts","sourceRoot":"","sources":["../../../src/database/migration/1778424680754-applications.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,kBAAkB,EAAE,WAAW,EAAE,MAAM,SAAS,CAAC;AAI1D,qBAAa,yBAA0B,YAAW,kBAAkB;IACrD,EAAE,CAAC,WAAW,EAAE,WAAW,GAAG,OAAO,CAAC,IAAI,CAAC;IAsE3C,IAAI,CAAC,WAAW,EAAE,WAAW,GAAG,OAAO,CAAC,IAAI,CAAC;CAqB3D"}

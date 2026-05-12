@@ -8,9 +8,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { Token } from "./Token";
 import { Application } from "./Application";
+import { Audit } from "./Audit";
 
 export enum UserRole {
   APPLICANT = "applicant",
@@ -50,11 +51,17 @@ export class User {
   @OneToMany(() => Token, (token) => token.user)
   tokens: Token[];
 
-  @OneToMany(() => Application, (application) => application.reviewedBy)
+  @OneToMany(() => Application, (application) => application.reviewer)
   assignedApplications: Application[];
 
   @OneToMany(() => Application, (application) => application.applicant)
   applications: Application[];
+
+  @OneToMany(() => Application, (application) => application.approver)
+  approvedApplications: Application[];
+
+  @OneToMany(() => Audit, (audit) => audit.user)
+  audits: Audit[];
 
   @CreateDateColumn()
   createdAt: Date;

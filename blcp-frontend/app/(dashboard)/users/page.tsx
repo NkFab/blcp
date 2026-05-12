@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Users, MagnifyingGlass, WarningCircle } from '@phosphor-icons/react';
 import { format } from 'date-fns';
+import { backendListPayload } from '@/lib/backend-shared';
 import type { BackendUser, UserRole } from '@/lib/types';
 
 function getRoleClassName(role: UserRole) {
@@ -38,7 +39,7 @@ export default function UsersPage() {
       try {
         const response = await fetch('/api/users');
         const data = await response.json();
-        setUsers(data.data || []);
+        setUsers(backendListPayload<BackendUser>(data));
       } catch (error) {
         console.error('Failed to fetch users:', error);
       } finally {
@@ -76,7 +77,6 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Users</h1>
-        <p className="text-muted-foreground">Read-only user listing from the backend API.</p>
       </div>
 
       <Card>
@@ -99,7 +99,6 @@ export default function UsersPage() {
             <Users size={20} />
             {filteredUsers.length} Users
           </CardTitle>
-          <CardDescription>The frontend no longer provides local user create/edit fallbacks.</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (

@@ -1,5 +1,8 @@
 import zod from "zod";
-import { ApplicationStatus } from "../../../database/entity";
+import {
+  ApplicationStatus,
+  ReviewRecommendation,
+} from "../../../database/entity";
 import {
   InstitutionType,
   LicenceType,
@@ -26,7 +29,17 @@ export const CreateApplicationSchema = zod.object({
   isExistingInstitution: zod.boolean().default(false),
   documents: zod.array(CreateApplicationDocumentSchema).optional(),
   submittedAt: zod.date().optional(),
-  applicantId: zod.string().optional(),
+  version: zod.number().int().optional(),
 });
 
-export type CreateApplicationDTO = zod.infer<typeof CreateApplicationSchema>;
+export const ReviewApplicationSchema = zod.object({
+  reviewComment: zod.string().optional(),
+  reviewRecommendation: zod.enum(ReviewRecommendation),
+  version: zod.number().int(),
+});
+
+export const ApproveApplicationSchema = zod.object({
+  approvalComment: zod.string().optional(),
+  status: zod.enum([ApplicationStatus.APPROVED, ApplicationStatus.REJECTED]),
+  version: zod.number().int(),
+});
