@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { backendUrl, clearAuthCookies, getAuthCookies, setAuthCookies } from './backend';
+import { backendUrl, clearAuthCookies, getAuthCookies, setAuthCookies } from './backend-server';
 
 type BackendFetchOptions = RequestInit & {
   path: string;

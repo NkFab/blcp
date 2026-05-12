@@ -83,15 +83,12 @@ class ApplicationController extends MainController<Application> {
 
   handleApplicationReview = asyncRouterHandler(async (req, res) => {
     await ReviewApplicationSchema.parseAsync(req.body);
-    return res.json(
-      await res.json(
-        await this.handleReviewProcess(req, "review", {
-          status: ApplicationStatus.REVIEWED,
-          reviewedAt: new Date(),
-          reviewerId: req.user.id,
-        }),
-      ),
-    );
+    const updated = await this.handleReviewProcess(req, "review", {
+      status: ApplicationStatus.REVIEWED,
+      reviewedAt: new Date(),
+      reviewerId: req.user.id,
+    });
+    return res.json(updated);
   });
 
   handleApplicationApproval = asyncRouterHandler(async (req, res) => {
@@ -124,17 +121,14 @@ class ApplicationController extends MainController<Application> {
     action: "review" | "approve",
     payload: Partial<Application>,
   ) {
-    // using transaction here prevent race conditions, where two reviewers could submit
-    // a review decision at the same time
     const result = await this.dataSource.transaction(async (manager) => {
       const application = await manager.findOne(Application, {
         where: { id: req.params.id!.toString() },
-        lock: { mode: "pessimistic_write" }, // held until transaction closes
+        lock: { mode: "pessimistic_write" },
       });
 
       if (!application) throw new HttpError("Application not found", 404);
 
-      // versioning ensure that we are not submitting stale data.
       if (application.version !== req.body.version) {
         throw new HttpError(
           "Application has been modified by another process. Please refresh and try again.",

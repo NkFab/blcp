@@ -13,7 +13,7 @@ export type ApplicationStatus =
 // Valid state transitions
 export const VALID_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
   draft: ['submitted'],
-  submitted: ['under_review'],
+  submitted: ['reviewed', 'under_review'],
   under_review: ['reviewed'],
   reviewed: ['approved', 'rejected'],
   approved: [], // Terminal state
@@ -26,6 +26,10 @@ export type ReviewRecommendation =
   | 'request_more_info';
 
 export type AuditAction =
+  | 'create'
+  | 'update'
+  | 'review'
+  | 'approve'
   | 'CREATE_APPLICATION'
   | 'UPDATE_APPLICATION'
   | 'SUBMIT_APPLICATION'
@@ -124,6 +128,7 @@ export interface AuditLogEntry {
   createdAt: string;
   updatedAt: string;
   user?: BackendUser | null;
+  application?: Pick<Application, 'id' | 'referenceNumber' | 'institutionName' | 'status'> | null;
 }
 
 export interface LegacyAuditLogEntry {
@@ -194,7 +199,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canReviewApplications: false,
     canApproveApplications: true,
     canManageUsers: true,
-    canViewAuditLog: false,
+    canViewAuditLog: true,
     canUploadDocuments: false,
   },
   admin: {
@@ -203,8 +208,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canViewAllApplications: true,
     canReviewApplications: false,
     canApproveApplications: false,
-    canManageUsers: false,
-    canViewAuditLog: false,
+    canManageUsers: true,
+    canViewAuditLog: true,
     canUploadDocuments: false,
   },
 };

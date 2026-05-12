@@ -28,6 +28,13 @@ export default {
       password: process.env.USER_PASSWORD!,
       role: UserRole.APPLICANT,
     },
+    {
+      firstName: "John",
+      lastName: "Doe",
+      email: "john.admin@test.com",
+      password: process.env.USER_PASSWORD!,
+      role: UserRole.ADMIN,
+    },
   ],
 
   applications: [

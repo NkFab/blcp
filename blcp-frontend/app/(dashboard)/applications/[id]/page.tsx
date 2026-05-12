@@ -266,7 +266,6 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             <Card>
               <CardHeader>
                 <CardTitle>Review Application</CardTitle>
-                <CardDescription>The backend now handles review submission directly.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -318,7 +317,6 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             <Card>
               <CardHeader>
                 <CardTitle>Approval Decision</CardTitle>
-                <CardDescription>The backend accepts approval and rejection through the approval endpoint.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -357,7 +355,6 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           <Card>
             <CardHeader>
               <CardTitle>Documents</CardTitle>
-              <CardDescription>Read-only document list from backend relations.</CardDescription>
             </CardHeader>
             <CardContent>
               {documents.length === 0 ? (
@@ -417,7 +414,6 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           <Card>
             <CardHeader>
               <CardTitle>Audit Trail</CardTitle>
-              <CardDescription>Application-scoped audit records emitted by the backend.</CardDescription>
             </CardHeader>
             <CardContent>
               {audits.length === 0 ? (
@@ -444,19 +440,6 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Backend Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Alert>
-                <AlertTitle>Frontend aligned to backend</AlertTitle>
-                <AlertDescription>
-                  This page now follows the backend’s actual review, approval, audit, and optimistic-locking workflow instead of simulating its own process.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

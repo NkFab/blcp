@@ -1,13 +1,9 @@
-### Explain choice I made
+### Notes
 
-why next and not react
-why use server pages
-
-what I could have done better?
-
-- Caching?? Using react query
+- Next.js was used for routing, layouts, and server-side API integration.
+- Improvements to consider:
+- Caching and query state management
 - Unit tests
-- 
 
 Features
 
@@ -47,6 +43,6 @@ Features
 - Applications list with search and filtering
 - New application form
 - Application detail with workflow actions
-- Users management (admin only)
-- Audit log viewer (admin/approver)
+- Users management
+- Audit log viewer
 - Profile page showing permissions

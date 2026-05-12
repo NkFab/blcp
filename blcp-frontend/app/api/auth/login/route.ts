@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { backendUrl, mapBackendUser, setAuthCookies } from '@/lib/backend';
+import { mapBackendUser } from '@/lib/backend-shared';
+import { backendUrl, setAuthCookies } from '@/lib/backend-server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +24,10 @@ export async function POST(request: NextRequest) {
 
     if (!loginResponse.ok) {
       return NextResponse.json(
-        { success: false, error: loginData.error || 'Login failed' },
+        {
+          success: false,
+          error: loginData.message || loginData.error || 'Login failed',
+        },
         { status: loginResponse.status }
       );
     }

@@ -7,12 +7,12 @@ const users = Router();
 
 users.get(
   "/",
-  authorize({ roles: [UserRole.SUPERVISOR] }),
+  authorize({ roles: [UserRole.SUPERVISOR, UserRole.ADMIN] }),
   userController.handleGetAll,
 );
 users.get(
   "/:id",
-  authorize({ roles: ["self", UserRole.SUPERVISOR] }),
+  authorize({ roles: ["self", UserRole.SUPERVISOR, UserRole.ADMIN] }),
   userController.handleGetOne,
 );
 

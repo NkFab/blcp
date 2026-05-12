@@ -5,7 +5,7 @@ export default async (datasource: EntityManager) => {
   try {
     const repo = datasource.getRepository(User);
 
-    const users = repo.create([
+    const users = [
       {
         firstName: "Fabrice",
         lastName: "Sup",
@@ -27,12 +27,26 @@ export default async (datasource: EntityManager) => {
         password: process.env.USER_PASSWORD!,
         role: UserRole.APPLICANT,
       },
-    ]);
+      {
+        firstName: "John",
+        lastName: "Doe",
+        email: "john.admin@test.com",
+        password: process.env.USER_PASSWORD!,
+        role: UserRole.ADMIN,
+      },
+    ];
 
-    await repo.upsert(users, {
-      conflictPaths: ["email"],
-      skipUpdateIfNoValuesChanged: true,
-    });
+    for (const user of users) {
+      const existing = await repo.findOne({
+        where: { email: user.email },
+      });
+
+      if (existing) {
+        continue;
+      }
+
+      await repo.save(repo.create(user));
+    }
   } catch (error) {
     console.error("Error seeding users:", error);
     throw error;

@@ -11,14 +11,14 @@ You can do that manually with:
 
 ```bash
 cd blcp-api
-pnpm setup
+npm setup
 ```
 
 That script runs:
 
 ```bash
-pnpm migration:run
-pnpm seeders:run
+npm migration:run
+npm seeders:run
 ```
 
 ## Run with Docker

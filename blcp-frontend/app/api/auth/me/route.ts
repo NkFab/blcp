@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { fetchBackend } from '@/lib/backend-proxy';
-import { mapBackendUser } from '@/lib/backend';
+import { mapBackendUser } from '@/lib/backend-shared';
 
 export async function GET() {
   try {

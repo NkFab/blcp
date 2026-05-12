@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileTextIcon, ClockIcon, CheckCircleIcon, XCircleIcon, PlusIcon } from '@phosphor-icons/react';
+import { backendListPayload } from '@/lib/backend-shared';
 import type { Application, ApplicationStatus } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -32,7 +33,7 @@ export default function DashboardPage() {
       try {
         const response = await fetch('/api/applications');
         const data = await response.json();
-        const apps = data.data || [];
+        const apps = backendListPayload<Application>(data);
         setApplications(apps);
         setStats({
           total: apps.length,

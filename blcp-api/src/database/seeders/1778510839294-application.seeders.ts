@@ -13,19 +13,24 @@ export default async (manager: EntityManager) => {
     const repo = manager.getRepository(Application);
     const userRepo = manager.getRepository(User);
 
-    const [reviewer, supervisor, applicant] = await Promise.all([
-      userRepo.findOne({ where: { role: UserRole.REVIEWER } }),
-      userRepo.findOne({ where: { role: UserRole.SUPERVISOR } }),
-      userRepo.findOne({ where: { role: UserRole.APPLICANT } }),
-    ]);
+    const reviewer = await userRepo.findOne({
+      where: { role: UserRole.REVIEWER },
+    });
+    const supervisor = await userRepo.findOne({
+      where: { role: UserRole.SUPERVISOR },
+    });
+    const applicant = await userRepo.findOne({
+      where: { role: UserRole.APPLICANT },
+    });
 
     const applicationData = data.applications.map((item) => {
       if (item.status === ApplicationStatus.REVIEWED) {
         return {
           ...item,
+          applicantId: applicant?.id ?? null,
           reviewerId: reviewer?.id ?? null,
           reviewRecommendation: ReviewRecommendation.RECOMMEND_APPROVAL,
-          reviewComment: "Looks good to me.",
+          reviewComment: "Recommended for approval.",
           reviewedAt: new Date(),
         };
       }
@@ -33,9 +38,10 @@ export default async (manager: EntityManager) => {
       if (item.status === ApplicationStatus.APPROVED) {
         return {
           ...item,
-          reviewerId: reviewer?.id ?? null, // approved implies reviewed
+          applicantId: applicant?.id ?? null,
+          reviewerId: reviewer?.id ?? null,
           reviewRecommendation: ReviewRecommendation.RECOMMEND_APPROVAL,
-          reviewComment: "Looks good to me.",
+          reviewComment: "Recommended for approval.",
           reviewedAt: new Date(),
           approverId: supervisor?.id ?? null,
           approvedAt: new Date(),
@@ -49,10 +55,17 @@ export default async (manager: EntityManager) => {
       };
     });
 
-    const applications = repo.create(
-      applicationData as DeepPartial<Application>[],
-    );
-    await repo.save(applications);
+    for (const item of applicationData) {
+      const existing = await repo.findOne({
+        where: { referenceNumber: item.referenceNumber },
+      });
+
+      if (existing) {
+        continue;
+      }
+
+      await repo.save(repo.create(item as DeepPartial<Application>));
+    }
   } catch (error) {
     console.error("Error seeding applications:", error);
     throw error;

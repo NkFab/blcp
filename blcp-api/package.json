@@ -8,12 +8,12 @@
       "typeorm": "typeorm-ts-node-commonjs",
       "build": "tsc -p .",
       "start": "node dist/index.js",
-      "setup": "pnpm migration:run && pnpm seeders:run",
+      "setup": "npm run migration:run && npm run seeders:run",
       "test": "NODE_ENV=test bash -c 'yarn seeders:run && jest --coverage'",
       "migration:create": "./scripts/migration.sh",
-      "migration:run": "yarn typeorm migration:run -d src/database/config.ts",
-      "migration:revert": "yarn typeorm migration:revert -d src/database/config.ts",
-      "migration:show": "yarn typeorm migration:show -d src/database/config.ts",
+      "migration:run": "npm run typeorm -- migration:run -d src/database/config.ts",
+      "migration:revert": "npm run typeorm -- migration:revert -d src/database/config.ts",
+      "migration:show": "npm run typeorm -- migration:show -d src/database/config.ts",
       "seeders:run": "ts-node src/database/seeders/index.ts"
    },
    "dependencies": {
@@ -43,6 +43,7 @@
       "supertest": "7.2.2",
       "ts-jest": "29.4.9",
       "ts-node": "10.9.2",
-      "typescript": "6.0.3"
+      "typescript": "6.0.3",
+      "typescript-eslint": "8.59.2"
    }
 }
