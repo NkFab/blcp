@@ -1,9 +1,8 @@
 import express from "express";
-import type { Express } from "express";
 import type { Request, Response } from "express";
 import { v1 } from "./api";
 
-const app: Express = express();
+const app = express();
 app.use(express.json());
 
 app.get("/", (req: Request, res: Response) => {

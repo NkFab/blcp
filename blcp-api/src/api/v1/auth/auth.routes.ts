@@ -1,9 +1,8 @@
 import { Router } from "express";
-import type { Router as ExpressRouter } from "express";
 import authController from "./auth.controller";
 import { authenticate } from "../../../middlewares/auth.middleware";
 
-const auth: ExpressRouter = Router();
+const auth = Router();
 
 auth.post("/login", authController.login);
 auth.post("/refresh", authController.refreshToken);

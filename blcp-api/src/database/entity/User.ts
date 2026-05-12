@@ -8,7 +8,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { Token } from "./Token";
 import { Application } from "./Application";
 import { Audit } from "./Audit";

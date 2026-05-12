@@ -16,7 +16,8 @@ async function runSeeders() {
         const seederModule = require(`./${file}`);
         if (seederModule && typeof seederModule.default === "function") {
           await seederModule.default(transactionalEntityManager);
-          console.log(`[x] ${file} executed successfully.`);
+          if (process.env.NODE_ENV !== "test")
+            console.log(`[x] ${file} executed successfully.`);
         } else {
           console.warn(
             `Seeder file ${file} does not export a default function.`,
@@ -25,12 +26,14 @@ async function runSeeders() {
       }
     });
 
-    console.log("Seeders executed successfully.");
+    if (process.env.NODE_ENV !== "test")
+      console.log("Seeders executed successfully.");
   } catch (error) {
     console.error("Error running seeders:", error);
   } finally {
     await AppDataSource.destroy();
-    console.log("Database connection closed.");
+    if (process.env.NODE_ENV !== "test")
+      console.log("Database connection closed.");
   }
 }
 

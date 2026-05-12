@@ -45,8 +45,6 @@ export const asyncRouterHandler = (
     try {
       return await fn(req, res, next);
     } catch (error) {
-      console.log("Error in asyncRouterHandler:", error);
-
       // handle validation errors by formatting zod errors
       if (error instanceof ZodError) {
         return res.status(400).json({

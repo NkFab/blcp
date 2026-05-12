@@ -13,6 +13,7 @@ import {
 } from "./application.validator";
 import { appEventEmitter } from "../../../events";
 import type { Request } from "express";
+
 type AuditAction = "create" | "update" | "review" | "approve";
 
 class ApplicationController extends MainController<Application> {
@@ -59,7 +60,7 @@ class ApplicationController extends MainController<Application> {
 
     if (req.user.role === UserRole.APPLICANT) {
       queryParams.where = { applicantId: req.user.id };
-    } 
+    }
 
     return res.json(await this.findAll(queryParams));
   });

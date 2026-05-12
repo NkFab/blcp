@@ -21,13 +21,6 @@ export default async (datasource: EntityManager) => {
         role: UserRole.REVIEWER,
       },
       {
-        firstName: "Claude",
-        lastName: "Reviewer",
-        email: "claude.reviewer@test.com",
-        password: process.env.USER_PASSWORD!,
-        role: UserRole.REVIEWER,
-      },
-      {
         firstName: "Denis",
         lastName: "App",
         email: "denis.applicant@test.com",
